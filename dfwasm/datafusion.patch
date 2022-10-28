@@ -234,7 +234,7 @@ index deaa0924..d07e40a7 100644
  use std::{any::Any, sync::Arc};
  
 diff --git a/datafusion/core/src/datasource/object_store.rs b/datafusion/core/src/datasource/object_store.rs
-index 69b18313..dede0581 100644
+index 69b18313..f7c51e81 100644
 --- a/datafusion/core/src/datasource/object_store.rs
 +++ b/datafusion/core/src/datasource/object_store.rs
 @@ -20,7 +20,7 @@
@@ -242,18 +242,16 @@ index 69b18313..dede0581 100644
  
  use datafusion_common::{DataFusionError, Result};
 -use object_store::local::LocalFileSystem;
-+// use object_store::memory::InMemory;
++use object_store::memory::InMemory;
  use object_store::ObjectStore;
  use parking_lot::RwLock;
  use std::collections::HashMap;
-@@ -161,8 +161,8 @@ impl ObjectStoreRegistry {
-     /// may be explicity registered with calls to [`ObjectStoreRegistry::register_store`] or
+@@ -162,7 +162,7 @@ impl ObjectStoreRegistry {
      /// created lazily, on-demand by the provided [`ObjectStoreProvider`]
      pub fn new_with_provider(provider: Option<Arc<dyn ObjectStoreProvider>>) -> Self {
--        let mut map: HashMap<String, Arc<dyn ObjectStore>> = HashMap::new();
+         let mut map: HashMap<String, Arc<dyn ObjectStore>> = HashMap::new();
 -        map.insert("file://".to_string(), Arc::new(LocalFileSystem::new()));
-+        let map: HashMap<String, Arc<dyn ObjectStore>> = HashMap::new();
-+        // map.insert("file://".to_string(), Arc::new(InMemory::new()));
++        map.insert("file://".to_string(), Arc::new(InMemory::new()));
          Self {
              object_stores: RwLock::new(map),
              provider,

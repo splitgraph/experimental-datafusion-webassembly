@@ -1,8 +1,21 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index ab3f427e..e793fddb 100644
+index ab3f427e..d577f6d4 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -34,3 +34,8 @@ exclude = ["datafusion-cli"]
+@@ -31,6 +31,31 @@ members = [
+ ]
+ exclude = ["datafusion-cli"]
+ 
++# Enable the version 2 feature resolver, which avoids unifying features for targets that are not being built
++#
++# Critically this prevents dev-dependencies from enabling features even when not building a target that
++# uses dev-dependencies, e.g. the library crate. This in turn ensures that we can catch invalid feature
++# flag combinations that would otherwise only surface in dependent crates
++#
++# Reference - https://doc.rust-lang.org/nightly/cargo/reference/features.html#feature-resolver-version-2
++#
++resolver = "2"
++
  [profile.release]
  codegen-units = 1
  lto = true
@@ -10,12 +23,22 @@ index ab3f427e..e793fddb 100644
 +
 +[patch.crates-io]
 +reqwest = { version="0.11.16", git = "https://github.com/milesforks/reqwest"  }
-+
++arrow = { path = "../arrow-rs/arrow" }
++arrow-array = { path = "../arrow-rs/arrow-array" }
++arrow-buffer = { path = "../arrow-rs/arrow-buffer" }
++arrow-data = { path = "../arrow-rs/arrow-data" }
++arrow-flight = { path = "../arrow-rs/arrow-flight" }
++arrow-schema = { path = "../arrow-rs/arrow-schema" }
++arrow-select = { path = "../arrow-rs/arrow-select" }
++parquet = { path = "../arrow-rs/parquet" }
++parquet_derive = { path = "../arrow-rs/parquet_derive" }
++parquet_derive_test = { path = "../arrow-rs/parquet_derive_test" }
++object_store = { path = "../arrow-rs/object_store" }
 diff --git a/datafusion/common/Cargo.toml b/datafusion/common/Cargo.toml
-index d69bc197..6cb4695d 100644
+index d69bc197..74c23353 100644
 --- a/datafusion/common/Cargo.toml
 +++ b/datafusion/common/Cargo.toml
-@@ -42,7 +42,16 @@ pyarrow = ["pyo3", "arrow/pyarrow"]
+@@ -42,7 +42,17 @@ pyarrow = ["pyo3", "arrow/pyarrow"]
  apache-avro = { version = "0.14", default-features = false, features = ["snappy"], optional = true }
  arrow = { version = "25.0.0", default-features = false }
  cranelift-module = { version = "0.89.0", optional = true }
@@ -26,15 +49,16 @@ index d69bc197..6cb4695d 100644
 +# ["serde", "serde_json", "reqwest", "base64", "rand"]#
 +# tokio = { version = "1.0", features = ["rt", "macros", "io-util"] }
 +object_store = {version = "0.5.1", default_features = false, features = ["serde", "serde_json", "quick-xml", "reqwest", "base64", "rand"], optional = true}
-+reqwest = { version = "0.11.16", features = ["json", "stream"] }
-+chrono = { version = "0.4.22", features = ["serde"]}
++reqwest = { version = "0.11.16", features = ["json", "stream", "blocking"] }
++
++# chrono = { version = "0.4.22", features = ["serde", "wasmbind","wasm-bindgen"], default_features = true }
 +
 +# object_store = "0.5.0"
  ordered-float = "3.0"
  parquet = { version = "25.0.0", default-features = false, optional = true }
  pyo3 = { version = "0.17.1", optional = true }
 diff --git a/datafusion/core/Cargo.toml b/datafusion/core/Cargo.toml
-index 7e9be303..2aaacf6f 100644
+index 7e9be303..6e15e2b9 100644
 --- a/datafusion/core/Cargo.toml
 +++ b/datafusion/core/Cargo.toml
 @@ -41,7 +41,7 @@ path = "src/lib.rs"
@@ -46,7 +70,7 @@ index 7e9be303..2aaacf6f 100644
  # Used for testing ONLY: causes all values to hash to the same value (test for collisions)
  force_hash_collisions = []
  # Used to enable JIT code generation
-@@ -57,12 +57,13 @@ unicode_expressions = ["datafusion-physical-expr/regex_expressions", "datafusion
+@@ -57,12 +57,14 @@ unicode_expressions = ["datafusion-physical-expr/regex_expressions", "datafusion
  ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
  apache-avro = { version = "0.14", optional = true }
  arrow = { version = "25.0.0", features = ["prettyprint"] }
@@ -57,13 +81,14 @@ index 7e9be303..2aaacf6f 100644
  bytes = "1.1"
 -bzip2 = "0.4.3"
 +bzip2 = { version = "0.4.3", optional = true }
++# chrono = { git = "https://github.com/chronotope/chrono", version = "0.5.0-alpha.1", default-features = false, features = ["serde", "wasmbind", "wasm-bindgen"] }
  chrono = { version = "0.4.22", default-features = false }
 -datafusion-common = { path = "../common", version = "13.0.0", features = ["parquet", "object_store"] }
 +datafusion-common = { path = "../common", version = "13.0.0", default-features = false, features = [ "parquet", "object_store"] } #-"object_store", -py03, "apache-avro", "cranelift-module",
  datafusion-expr = { path = "../expr", version = "13.0.0" }
  datafusion-jit = { path = "../jit", version = "13.0.0", optional = true }
  datafusion-optimizer = { path = "../optimizer", version = "13.0.0" }
-@@ -78,10 +79,14 @@ lazy_static = { version = "^1.4.0" }
+@@ -78,10 +80,14 @@ lazy_static = { version = "^1.4.0" }
  log = "^0.4"
  num-traits = { version = "0.2", optional = true }
  num_cpus = "1.13.0"
@@ -80,7 +105,7 @@ index 7e9be303..2aaacf6f 100644
  paste = "^1.0"
  percent-encoding = "2.2.0"
  pin-project-lite = "^0.2.7"
-@@ -91,11 +96,15 @@ rayon = { version = "1.5", optional = true }
+@@ -91,11 +97,15 @@ rayon = { version = "1.5", optional = true }
  smallvec = { version = "1.6", features = ["union"] }
  sqlparser = "0.25"
  tempfile = "3"
@@ -95,7 +120,7 @@ index 7e9be303..2aaacf6f 100644
  url = "2.2"
  uuid = { version = "1.0", features = ["v4"] }
 +# force reqwest-wasm to resolve (via patch in our downstream consumer) so tokio::spawn_blocking can work
-+reqwest = { version = "0.11.16", features = ["json", "stream"] }
++reqwest = { version = "0.11.16", features = ["json", "stream", "blocking"] }
  
  [dev-dependencies]
  arrow = { version = "25.0.0", features = ["prettyprint", "dyn_cmp_dict"] }
@@ -155,3 +180,43 @@ index 69b18313..d026a63b 100644
      #[test]
      fn test_get_by_url_file() {
          let sut = ObjectStoreRegistry::default();
+diff --git a/datafusion/optimizer/Cargo.toml b/datafusion/optimizer/Cargo.toml
+index 729e2306..90445850 100644
+--- a/datafusion/optimizer/Cargo.toml
++++ b/datafusion/optimizer/Cargo.toml
+@@ -39,6 +39,7 @@ unicode_expressions = []
+ [dependencies]
+ arrow = { version = "25.0.0", features = ["prettyprint"] }
+ async-trait = "0.1.41"
++# chrono = { git = "https://github.com/chronotope/chrono", version = "0.5.0-alpha.1", default-features = false }
+ chrono = { version = "0.4.22", default-features = false }
+ datafusion-common = { path = "../common", version = "13.0.0" }
+ datafusion-expr = { path = "../expr", version = "13.0.0" }
+diff --git a/datafusion/physical-expr/Cargo.toml b/datafusion/physical-expr/Cargo.toml
+index e0703829..832ef2e8 100644
+--- a/datafusion/physical-expr/Cargo.toml
++++ b/datafusion/physical-expr/Cargo.toml
+@@ -43,7 +43,8 @@ ahash = { version = "0.8", default-features = false, features = ["runtime-rng"]
+ arrow = { version = "25.0.0", features = ["prettyprint"] }
+ blake2 = { version = "^0.10.2", optional = true }
+ blake3 = { version = "1.0", optional = true }
+-chrono = { version = "0.4.22", default-features = false }
++# chrono = { git = "https://github.com/chronotope/chrono", version = "0.5.0-alpha.1", default-features = true, features = ["wasmbind", "wasm-bindgen"] }
++chrono = { version = "0.4.22" }
+ datafusion-common = { path = "../common", version = "13.0.0" }
+ datafusion-expr = { path = "../expr", version = "13.0.0" }
+ datafusion-row = { path = "../row", version = "13.0.0" }
+diff --git a/datafusion/physical-expr/src/datetime_expressions.rs b/datafusion/physical-expr/src/datetime_expressions.rs
+index 0214d1bf..0b37a5cc 100644
+--- a/datafusion/physical-expr/src/datetime_expressions.rs
++++ b/datafusion/physical-expr/src/datetime_expressions.rs
+@@ -189,7 +189,8 @@ fn quarter_month(date: &NaiveDateTime) -> u32 {
+ }
+ 
+ fn date_trunc_single(granularity: &str, value: i64) -> Result<i64> {
+-    let value = timestamp_ns_to_datetime(value).with_nanosecond(0);
++    // timestamp_ns_to_datetime now returns Option (https://github.com/apache/arrow-rs/pull/2894/files)
++    let value = timestamp_ns_to_datetime(value).unwrap().with_nanosecond(0);
+     let value = match granularity {
+         "second" => value,
+         "minute" => value.and_then(|d| d.with_second(0)),

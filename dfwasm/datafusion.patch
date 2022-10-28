@@ -34,6 +34,23 @@ index ab3f427e..d577f6d4 100644
 +parquet_derive = { path = "../arrow-rs/parquet_derive" }
 +parquet_derive_test = { path = "../arrow-rs/parquet_derive_test" }
 +object_store = { path = "../arrow-rs/object_store" }
+diff --git a/README.md b/README.md
+index 29113678..4ca01a91 100644
+--- a/README.md
++++ b/README.md
+@@ -17,6 +17,12 @@
+   under the License.
+ -->
+ 
++# Patch
++
++```
++export RUSTFLAGS="--cfg tokio_unstable" ; cargo build --verbose --target wasm32-wasi --package datafusion --package datafusion-expr --package datafusion-proto --package datafusion-common --no-default-features --features datafusion-proto/default,datafusion/regex_expressions,datafusion/unicode_expressions,datafusion/object_store,datafusion-common/apache-avro,datafusion-common/parquet
++```
++
+ # DataFusion
+ 
+ <img src="docs/source/_static/images/DataFusion-Logo-Background-White.svg" width="256" alt="logo"/>
 diff --git a/datafusion/common/Cargo.toml b/datafusion/common/Cargo.toml
 index d69bc197..74c23353 100644
 --- a/datafusion/common/Cargo.toml
@@ -58,7 +75,7 @@ index d69bc197..74c23353 100644
  parquet = { version = "25.0.0", default-features = false, optional = true }
  pyo3 = { version = "0.17.1", optional = true }
 diff --git a/datafusion/core/Cargo.toml b/datafusion/core/Cargo.toml
-index 7e9be303..6e15e2b9 100644
+index 7e9be303..449366a8 100644
 --- a/datafusion/core/Cargo.toml
 +++ b/datafusion/core/Cargo.toml
 @@ -41,7 +41,7 @@ path = "src/lib.rs"
@@ -70,8 +87,12 @@ index 7e9be303..6e15e2b9 100644
  # Used for testing ONLY: causes all values to hash to the same value (test for collisions)
  force_hash_collisions = []
  # Used to enable JIT code generation
-@@ -57,12 +57,14 @@ unicode_expressions = ["datafusion-physical-expr/regex_expressions", "datafusion
- ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
+@@ -54,15 +54,17 @@ simd = ["arrow/simd"]
+ unicode_expressions = ["datafusion-physical-expr/regex_expressions", "datafusion-sql/unicode_expressions"]
+ 
+ [dependencies]
+-ahash = { version = "0.8", default-features = false, features = ["runtime-rng"] }
++ahash = { version = "^0.8", default-features = false, features = ["runtime-rng"] }
  apache-avro = { version = "0.14", optional = true }
  arrow = { version = "25.0.0", features = ["prettyprint"] }
 -async-compression = { version = "0.3.14", features = ["bzip2", "gzip", "futures-io", "tokio"] }
@@ -114,7 +135,7 @@ index 7e9be303..6e15e2b9 100644
 -tokio-util = { version = "0.7.4", features = ["io"] }
 +# tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "fs", "parking_lot"] } # -"rt-multi-thread", -"fs", -"parking_lot"
 +# TODO: rustls support ? https://github.com/samdenty/reqwest/blob/master/Cargo.toml
-+tokio = { version = "1.0", features = ["rt", "macros", "io-util"] }
++tokio = { version = "1.0", features = ["rt", "macros", "io-util", "parking_lot"] }
 +tokio-stream = { version = "0.1", default_features = false, features = ["time"] } #-"io_util"
 +tokio-util = { version = "0.7.4", features = ["io"] }  #-"io"
  url = "2.2"
@@ -124,6 +145,78 @@ index 7e9be303..6e15e2b9 100644
  
  [dev-dependencies]
  arrow = { version = "25.0.0", features = ["prettyprint", "dyn_cmp_dict"] }
+diff --git a/datafusion/core/src/datasource/file_format/file_type.rs b/datafusion/core/src/datasource/file_format/file_type.rs
+index f08a21ca..901fc851 100644
+--- a/datafusion/core/src/datasource/file_format/file_type.rs
++++ b/datafusion/core/src/datasource/file_format/file_type.rs
+@@ -20,9 +20,10 @@
+ use crate::error::{DataFusionError, Result};
+ use std::io::Error;
+ 
+-use async_compression::tokio::bufread::{
+-    BzDecoder as AsyncBzDecoder, GzipDecoder as AsyncGzDecoder,
+-};
++#[cfg(feature = "dep:bzip2")]
++use async_compression::tokio::bufread::BzDecoder as AsyncBzDecoder;
++use async_compression::tokio::bufread::GzipDecoder as AsyncGzDecoder;
++#[cfg(feature = "dep:bzip2")]
+ use bzip2::read::BzDecoder;
+ 
+ use crate::datasource::file_format::avro::DEFAULT_AVRO_EXTENSION;
+@@ -46,6 +47,7 @@ pub trait GetExt {
+ pub enum FileCompressionType {
+     /// Gzip-ed file
+     GZIP,
++    #[cfg(feature = "dep:bzip2")]
+     /// Bzip2-ed file
+     BZIP2,
+     /// Uncompressed file
+@@ -56,6 +58,7 @@ impl GetExt for FileCompressionType {
+     fn get_ext(&self) -> String {
+         match self {
+             FileCompressionType::GZIP => ".gz".to_owned(),
++            #[cfg(feature = "dep:bzip2")]
+             FileCompressionType::BZIP2 => ".bz2".to_owned(),
+             FileCompressionType::UNCOMPRESSED => "".to_owned(),
+         }
+@@ -69,6 +72,7 @@ impl FromStr for FileCompressionType {
+         let s = s.to_uppercase();
+         match s.as_str() {
+             "GZIP" | "GZ" => Ok(FileCompressionType::GZIP),
++            #[cfg(feature = "dep:bzip2")]
+             "BZIP2" | "BZ2" => Ok(FileCompressionType::BZIP2),
+             "" => Ok(FileCompressionType::UNCOMPRESSED),
+             _ => Err(DataFusionError::NotImplemented(format!(
+@@ -104,6 +108,7 @@ impl FileCompressionType {
+                 ReaderStream::new(AsyncGzDecoder::new(StreamReader::new(s)))
+                     .map_err(err_converter),
+             ),
++            #[cfg(feature = "dep:bzip2")]
+             FileCompressionType::BZIP2 => Box::new(
+                 ReaderStream::new(AsyncBzDecoder::new(StreamReader::new(s)))
+                     .map_err(err_converter),
+@@ -119,6 +124,7 @@ impl FileCompressionType {
+     ) -> Box<dyn std::io::Read + Send> {
+         match self {
+             FileCompressionType::GZIP => Box::new(GzDecoder::new(r)),
++            #[cfg(feature = "dep:bzip2")]
+             FileCompressionType::BZIP2 => Box::new(BzDecoder::new(r)),
+             FileCompressionType::UNCOMPRESSED => Box::new(r),
+         }
+diff --git a/datafusion/core/src/datasource/listing/table.rs b/datafusion/core/src/datasource/listing/table.rs
+index deaa0924..d07e40a7 100644
+--- a/datafusion/core/src/datasource/listing/table.rs
++++ b/datafusion/core/src/datasource/listing/table.rs
+@@ -17,7 +17,8 @@
+ 
+ //! The table implementation.
+ 
+-use ahash::HashMap;
++// use ahash::HashMap;
++use std::collections::HashMap;
+ use std::str::FromStr;
+ use std::{any::Any, sync::Arc};
+ 
 diff --git a/datafusion/core/src/datasource/object_store.rs b/datafusion/core/src/datasource/object_store.rs
 index 69b18313..d026a63b 100644
 --- a/datafusion/core/src/datasource/object_store.rs
@@ -180,6 +273,66 @@ index 69b18313..d026a63b 100644
      #[test]
      fn test_get_by_url_file() {
          let sut = ObjectStoreRegistry::default();
+diff --git a/datafusion/core/src/physical_plan/sorts/sort.rs b/datafusion/core/src/physical_plan/sorts/sort.rs
+index 763c7c55..04a0faac 100644
+--- a/datafusion/core/src/physical_plan/sorts/sort.rs
++++ b/datafusion/core/src/physical_plan/sorts/sort.rs
+@@ -598,7 +598,8 @@ async fn spill_partial_sorted_stream(
+ ) -> Result<()> {
+     let (sender, receiver) = tokio::sync::mpsc::channel(2);
+     let path: PathBuf = path.into();
+-    let handle = task::spawn_blocking(move || write_sorted(receiver, path, schema));
++
++    let handle = task::spawn(async move { write_sorted(receiver, path, schema) });
+     while let Some(item) = in_mem_stream.next().await {
+         sender.send(item).await.ok();
+     }
+@@ -620,11 +621,22 @@ fn read_spill_as_stream(
+         Sender<ArrowResult<RecordBatch>>,
+         Receiver<ArrowResult<RecordBatch>>,
+     ) = tokio::sync::mpsc::channel(2);
+-    let join_handle = task::spawn_blocking(move || {
++    let join_handle = task::spawn(async move {
+         if let Err(e) = read_spill(sender, path.path()) {
+             error!("Failure while reading spill file: {:?}. Error: {}", path, e);
+         }
+     });
++    // let join_handle = task::spawn(move || {
++    //     debug!("Creating fake join_handle for wasm without spawn_blocking support")
++    // });
++
++    // block on the main thread for wasm
++    // move || {
++    //     if let Err(e) = read_spill(sender, path.path()) {
++    //         error!("Failure while reading spill file: {:?}. Error: {}", path, e);
++    //     }
++    // }();
++
+     Ok(RecordBatchReceiverStream::create(
+         &schema,
+         receiver,
+diff --git a/datafusion/core/src/test/mod.rs b/datafusion/core/src/test/mod.rs
+index bce27767..60738f85 100644
+--- a/datafusion/core/src/test/mod.rs
++++ b/datafusion/core/src/test/mod.rs
+@@ -33,7 +33,9 @@ use array::ArrayRef;
+ use arrow::array::{self, Array, Decimal128Builder, Int32Array};
+ use arrow::datatypes::{DataType, Field, Schema, SchemaRef};
+ use arrow::record_batch::RecordBatch;
++#[cfg(feature = "dep:bzip2")]
+ use bzip2::write::BzEncoder;
++#[cfg(feature = "dep:bzip2")]
+ use bzip2::Compression as BzCompression;
+ use flate2::write::GzEncoder;
+ use flate2::Compression as GzCompression;
+@@ -115,6 +117,7 @@ pub fn partitioned_file_groups(
+             FileCompressionType::GZIP => {
+                 Box::new(GzEncoder::new(file, GzCompression::default()))
+             }
++            #[cfg(feature = "dep:bzip2")]
+             FileCompressionType::BZIP2 => {
+                 Box::new(BzEncoder::new(file, BzCompression::default()))
+             }
 diff --git a/datafusion/optimizer/Cargo.toml b/datafusion/optimizer/Cargo.toml
 index 729e2306..90445850 100644
 --- a/datafusion/optimizer/Cargo.toml

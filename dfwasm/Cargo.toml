@@ -1,0 +1,48 @@
+[package]
+name = "dfwasm"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# tokio = { default_features = false, features = ["macros", "rt", "signal"] }
+# parquet = { default-features = false, features = ["arrow", "snap", "brotli", "flate2", "base64"]  }
+# datafusion-expr = { git = "https://github.com/apache/arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
+# datafusion-proto = { git = "https://github.com/apache/arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
+tokio = { version = "1.0", features = ["sync","macros","io-util","rt","time"] }
+reqwest = { version = "0.11.16", features = ["json", "stream"] }
+datafusion-expr = { path = "../../arrow-datafusion/datafusion/expr" }
+datafusion-proto = { path = "../../arrow-datafusion/datafusion/proto" }
+
+# note: developing with local repo to add patch to 784f10bb57f86a4db2e01a6cb51da742af0dd9d9
+[dependencies.datafusion]
+# git = "https://github.com/apache/arrow-datafusion"
+# rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9"
+path = "../../arrow-datafusion/datafusion/core"
+default-features = false
+features = ["regex_expressions", "unicode_expressions", "object_store"] # -crypto_expressions, -object_storeX+
+
+[dependencies.datafusion-common]
+path = "../../arrow-datafusion/datafusion/common"
+default-features = false
+features = ["apache-avro", "parquet"] # -object_store, -"cranelift-module", -"pyo3", "object_store"
+
+[patch.crates-io]
+# datafusion = { git = "../../arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
+# datafusion-expr = { git = "../../arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
+# datafusion-proto = { git = "../../arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
+datafusion = { path = "../../arrow-datafusion/datafusion/core"}
+datafusion-common = { path = "../../arrow-datafusion/datafusion/common"}
+datafusion-expr = { path = "../../arrow-datafusion/datafusion/expr"}
+datafusion-jit = { path = "../../arrow-datafusion/datafusion/jit"}
+datafusion-optimizer = { path = "../../arrow-datafusion/datafusion/optimizer"}
+datafusion-physical-expr = { path = "../../arrow-datafusion/datafusion/physical-expr"}
+datafusion-proto = { path = "../../arrow-datafusion/datafusion/proto"}
+datafusion-row = { path = "../../arrow-datafusion/datafusion/row"}
+datafusion-sql = { path = "../../arrow-datafusion/datafusion/sql"}
+
+# https://github.com/samdenty/reqwest adds tokio features but names the package reqwest-wasm
+# https://github.com/milesforks/reqwest renames package to reqwest and bumps version
+reqwest = { version = "0.11.16", git = "https://github.com/milesforks/reqwest" }

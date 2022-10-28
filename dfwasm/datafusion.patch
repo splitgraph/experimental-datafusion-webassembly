@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index ab3f427e..d577f6d4 100644
+index ab3f427e..2f24803f 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -31,6 +31,31 @@ members = [
+@@ -31,6 +31,47 @@ members = [
  ]
  exclude = ["datafusion-cli"]
  
@@ -20,20 +20,36 @@ index ab3f427e..d577f6d4 100644
  codegen-units = 1
  lto = true
 +
-+
 +[patch.crates-io]
++# https://github.com/samdenty/reqwest adds tokio features but names the package reqwest-wasm
++# https://github.com/milesforks/reqwest renames package to reqwest and bumps version
 +reqwest = { version="0.11.16", git = "https://github.com/milesforks/reqwest"  }
-+arrow = { path = "../arrow-rs/arrow" }
-+arrow-array = { path = "../arrow-rs/arrow-array" }
-+arrow-buffer = { path = "../arrow-rs/arrow-buffer" }
-+arrow-data = { path = "../arrow-rs/arrow-data" }
-+arrow-flight = { path = "../arrow-rs/arrow-flight" }
-+arrow-schema = { path = "../arrow-rs/arrow-schema" }
-+arrow-select = { path = "../arrow-rs/arrow-select" }
-+parquet = { path = "../arrow-rs/parquet" }
-+parquet_derive = { path = "../arrow-rs/parquet_derive" }
-+parquet_derive_test = { path = "../arrow-rs/parquet_derive_test" }
-+object_store = { path = "../arrow-rs/object_store" }
++
++# ARROW: this git hash is ~2 commits before 26.0.0
++arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++arrow-buffer ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++arrow-flight ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++arrow-schema ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++arrow-select ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++parquet = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++parquet_derive ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++parquet_derive_test = {git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++object_store ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++
++# ARROW: uncomment these to develop from a local version of the arrow-rs repository
++# arrow = { path = "../arrow-rs/arrow" }
++# arrow-array = { path = "../arrow-rs/arrow-array" }
++# arrow-buffer = { path = "../arrow-rs/arrow-buffer" }
++# arrow-data = { path = "../arrow-rs/arrow-data" }
++# arrow-flight = { path = "../arrow-rs/arrow-flight" }
++# arrow-schema = { path = "../arrow-rs/arrow-schema" }
++# arrow-select = { path = "../arrow-rs/arrow-select" }
++# parquet = { path = "../arrow-rs/parquet" }
++# parquet_derive = { path = "../arrow-rs/parquet_derive" }
++# parquet_derive_test = { path = "../arrow-rs/parquet_derive_test" }
++# object_store = { path = "../arrow-rs/object_store" }
 diff --git a/README.md b/README.md
 index 29113678..4ca01a91 100644
 --- a/README.md
@@ -218,7 +234,7 @@ index deaa0924..d07e40a7 100644
  use std::{any::Any, sync::Arc};
  
 diff --git a/datafusion/core/src/datasource/object_store.rs b/datafusion/core/src/datasource/object_store.rs
-index 69b18313..fab36c4f 100644
+index 69b18313..dede0581 100644
 --- a/datafusion/core/src/datasource/object_store.rs
 +++ b/datafusion/core/src/datasource/object_store.rs
 @@ -20,7 +20,7 @@
@@ -241,37 +257,19 @@ index 69b18313..fab36c4f 100644
          Self {
              object_stores: RwLock::new(map),
              provider,
-@@ -261,21 +261,19 @@ mod tests {
+@@ -267,7 +267,6 @@ mod tests {
+         let url = ListingTableUrl::parse("hdfs://localhost:8020/key").unwrap();
+         sut.get_by_url(&url).unwrap();
      }
- 
-     #[test]
--    fn test_get_by_url_hdfs() {
--        let sut = ObjectStoreRegistry::default();
--        sut.register_store("hdfs", "localhost:8020", Arc::new(LocalFileSystem::new()));
--        let url = ListingTableUrl::parse("hdfs://localhost:8020/key").unwrap();
--        sut.get_by_url(&url).unwrap();
--    }
 -
-+    // fn test_get_by_url_hdfs() {
-+    //     let sut = ObjectStoreRegistry::default();
-+    //     sut.register_store("hdfs", "localhost:8020", Arc::new(LocalFileSystem::new()));
-+    //     let url = ListingTableUrl::parse("hdfs://localhost:8020/key").unwrap();
-+    //     sut.get_by_url(&url).unwrap();
-+    // }
      #[test]
--    fn test_get_by_url_s3() {
--        let sut = ObjectStoreRegistry::default();
--        sut.register_store("s3", "bucket", Arc::new(LocalFileSystem::new()));
--        let url = ListingTableUrl::parse("s3://bucket/key").unwrap();
--        sut.get_by_url(&url).unwrap();
--    }
+     fn test_get_by_url_s3() {
+         let sut = ObjectStoreRegistry::default();
+@@ -275,7 +274,6 @@ mod tests {
+         let url = ListingTableUrl::parse("s3://bucket/key").unwrap();
+         sut.get_by_url(&url).unwrap();
+     }
 -
-+    // fn test_get_by_url_s3() {
-+    //     let sut = ObjectStoreRegistry::default();
-+    //     sut.register_store("s3", "bucket", Arc::new(LocalFileSystem::new()));
-+    //     let url = ListingTableUrl::parse("s3://bucket/key").unwrap();
-+    //     sut.get_by_url(&url).unwrap();
-+    // }
      #[test]
      fn test_get_by_url_file() {
          let sut = ObjectStoreRegistry::default();

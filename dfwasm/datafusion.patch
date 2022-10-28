@@ -220,14 +220,16 @@ index f08a21ca..901fc851 100644
              FileCompressionType::UNCOMPRESSED => Box::new(r),
          }
 diff --git a/datafusion/core/src/datasource/listing/table.rs b/datafusion/core/src/datasource/listing/table.rs
-index deaa0924..d07e40a7 100644
+index deaa0924..5117000f 100644
 --- a/datafusion/core/src/datasource/listing/table.rs
 +++ b/datafusion/core/src/datasource/listing/table.rs
-@@ -17,7 +17,8 @@
+@@ -17,7 +17,10 @@
  
  //! The table implementation.
  
 -use ahash::HashMap;
++// TODO: I just naively replaced ahash::HashMap with std::collections::HashMap
++//       (and I'm not sure it will actually work or won't break anything)
 +// use ahash::HashMap;
 +use std::collections::HashMap;
  use std::str::FromStr;
@@ -272,7 +274,7 @@ index 69b18313..f7c51e81 100644
      fn test_get_by_url_file() {
          let sut = ObjectStoreRegistry::default();
 diff --git a/datafusion/core/src/physical_plan/sorts/sort.rs b/datafusion/core/src/physical_plan/sorts/sort.rs
-index 763c7c55..04a0faac 100644
+index 763c7c55..0999fca3 100644
 --- a/datafusion/core/src/physical_plan/sorts/sort.rs
 +++ b/datafusion/core/src/physical_plan/sorts/sort.rs
 @@ -598,7 +598,8 @@ async fn spill_partial_sorted_stream(
@@ -280,31 +282,22 @@ index 763c7c55..04a0faac 100644
      let (sender, receiver) = tokio::sync::mpsc::channel(2);
      let path: PathBuf = path.into();
 -    let handle = task::spawn_blocking(move || write_sorted(receiver, path, schema));
-+
++    // FIXME: this should be spawn_blocking but that wasn't compiling
 +    let handle = task::spawn(async move { write_sorted(receiver, path, schema) });
      while let Some(item) = in_mem_stream.next().await {
          sender.send(item).await.ok();
      }
-@@ -620,11 +621,22 @@ fn read_spill_as_stream(
+@@ -620,11 +621,13 @@ fn read_spill_as_stream(
          Sender<ArrowResult<RecordBatch>>,
          Receiver<ArrowResult<RecordBatch>>,
      ) = tokio::sync::mpsc::channel(2);
 -    let join_handle = task::spawn_blocking(move || {
++    // FIXME: this should be spawn_blocking but that wasn't compiling
 +    let join_handle = task::spawn(async move {
          if let Err(e) = read_spill(sender, path.path()) {
              error!("Failure while reading spill file: {:?}. Error: {}", path, e);
          }
      });
-+    // let join_handle = task::spawn(move || {
-+    //     debug!("Creating fake join_handle for wasm without spawn_blocking support")
-+    // });
-+
-+    // block on the main thread for wasm
-+    // move || {
-+    //     if let Err(e) = read_spill(sender, path.path()) {
-+    //         error!("Failure while reading spill file: {:?}. Error: {}", path, e);
-+    //     }
-+    // }();
 +
      Ok(RecordBatchReceiverStream::create(
          &schema,

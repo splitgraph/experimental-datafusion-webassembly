@@ -15,6 +15,20 @@ the starting point was this gist from Nov 2021: https://gist.github.com/roee88/9
 0
 ```
 
+when compiled with `--release`, the binary is `23M` (I believe that's [23 \_mega_bytes](https://www.gnu.org/software/coreutils/manual/html_node/Block-size.html), but it's a touchy subject):
+
+```
+❯ BLOCK_SIZE=human-readable du -bh target/wasm32-wasi/release/dfwasm.wasm
+23M     target/wasm32-wasi/release/dfwasm.wasm
+```
+
+the development binary is slightly bigger:
+
+```
+❯ du -bh target/wasm32-wasi/debug/dfwasm.wasm
+497M    target/wasm32-wasi/debug/dfwasm.wasm
+```
+
 it requires some minor patching of `datafusion`:
 
 - only use `InMemory` object store

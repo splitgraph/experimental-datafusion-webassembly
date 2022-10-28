@@ -1,4 +1,4 @@
-# compile library using datafusion target for target `wasm32-wasi`
+# compile library using datafusion for target `wasm32-wasi`
 
 this compiles and runs on wasmedge
 
@@ -28,7 +28,7 @@ in general, most of the changes are feature-flagged and in theory this could be 
 
 ## install pre-requisities
 
-notes for ubuntu 18 (!) YMMV
+notes for ubuntu 20 YMMV
 
 ```bash
 sudo apt-get update -qq && sudo apt-get install -yy cmake
@@ -55,8 +55,14 @@ rustup target add wasm32-wasi
 here are my versions at time of writing (recently successful compilation and run):
 
 ```bash
-❯ rustc --version
+❯ rustc -vV
 rustc 1.64.0 (a55dd71d5 2022-09-19)
+binary: rustc
+commit-hash: a55dd71d5fb0ec5a6a3a9e8c27b2127ba491ce52
+commit-date: 2022-09-19
+host: x86_64-unknown-linux-gnu
+release: 1.64.0
+LLVM version: 14.0.6
 
 ❯ rustup --version
 rustup 1.25.1 (bb60b1e89 2022-07-12)
@@ -68,6 +74,22 @@ cargo 1.64.0 (387270bc7 2022-09-16)
 
 ❯ protoc --version
 libprotoc 3.21.9
+
+❯ clang --version
+clang version 10.0.0-4ubuntu1
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+
+❯ uname -a
+Linux miles-dev-0-dev 5.15.0-1021-gcp #28~20.04.1-Ubuntu SMP Mon Oct 17 11:37:54 UTC 2022 x86_64 x86_64 x86_64 GNU/Linux
+
+❯ lsb_release -a
+No LSB modules are available.
+Distributor ID: Ubuntu
+Description:    Ubuntu 20.04.2 LTS
+Release:        20.04
+Codename:       focal
 ```
 
 ## setup patch for `datafusion`

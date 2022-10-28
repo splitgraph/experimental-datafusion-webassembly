@@ -39,7 +39,7 @@ async fn run() -> Result<()>{
     )?;
 
     // Register table
-    let mut ctx = ExecutionContext::new();
+    let ctx = SessionContext::new();
     let provider = MemTable::try_new(schema, vec![vec![batch]])?;
     ctx.register_table("t", Arc::new(provider))?;
 

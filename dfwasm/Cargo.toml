@@ -1,3 +1,13 @@
+# Enable the version 2 feature resolver, which avoids unifying features for targets that are not being built
+#
+# Critically this prevents dev-dependencies from enabling features even when not building a target that
+# uses dev-dependencies, e.g. the library crate. This in turn ensures that we can catch invalid feature
+# flag combinations that would otherwise only surface in dependent crates
+#
+# Reference - https://doc.rust-lang.org/nightly/cargo/reference/features.html#feature-resolver-version-2
+#
+resolver = 2
+
 [package]
 name = "dfwasm"
 version = "0.1.0"
@@ -46,3 +56,29 @@ datafusion-sql = { path = "../../arrow-datafusion/datafusion/sql"}
 # https://github.com/samdenty/reqwest adds tokio features but names the package reqwest-wasm
 # https://github.com/milesforks/reqwest renames package to reqwest and bumps version
 reqwest = { version = "0.11.16", git = "https://github.com/milesforks/reqwest" }
+
+
+# Arrow (https://github.com/apache/arrow-rs)
+# arrow = { path = "../../arrow-rs/arrow" }
+# arrow-array = { path = "../../arrow-rs/arrow-array" }
+# arrow-buffer = { path = "../../arrow-rs/arrow-buffer" }
+# arrow-data = { path = "../../arrow-rs/arrow-data" }
+# arrow-flight = { path = "../../arrow-rs/arrow-flight" }
+# arrow-schema = { path = "../../arrow-rs/arrow-schema" }
+# arrow-select = { path = "../../arrow-rs/arrow-select" }
+# parquet = { path = "../../arrow-rs/parquet" }
+# parquet_derive = { path = "../../arrow-rs/parquet_derive" }
+# parquet_derive_test = { path = "../../arrow-rs/parquet_derive_test" }
+# object_store = { path = "../../arrow-rs/object_store" }
+
+arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow-buffer ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow-flight ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow-schema ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow-select ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+parquet = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+parquet_derive ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+parquet_derive_test = {git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+object_store ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }

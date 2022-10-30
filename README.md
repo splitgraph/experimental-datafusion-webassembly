@@ -1,3 +1,29 @@
+# build instructions for `wasm32-unknown-unknown` (run in browser with `wasm-pack`)
+
+install prereqs (including `npm` if you don't have it):
+
+```
+cargo install wasm-pack
+```
+
+build with wasm-pack and run in browser:
+
+```
+export RUSTFLAGS="--cfg tokio_unstable" ; wasm-pack build --debug && wasm2wat pkg/dfwasm_bg.wasm -o pkg/dfwasm_bg.wat && ./inspect-wat.sh pkg/dfwasm_bg.wat && cd www && npm install && npm start
+```
+
+then go to `localhost:8080` (it takes a while with the debug build, drop `--debug` for faster loads)
+
+![image](https://user-images.githubusercontent.com/835921/198900371-1329dda3-1504-4cb0-9c7b-0b1799dd3b8c.png)
+
+the `.wasm` file is written to `pkg/dfwasm_bg.wasm`. you might need to run `npm install` inside `www` after every rebuild in order to pick up its updates
+
+if you want to build with cargo directly:
+
+```
+export RUSTFLAGS="--cfg tokio_unstable" ; cargo build --verbose --target wasm32-unknown-unknown
+```
+
 # compile library using datafusion for target `wasm32-wasi`
 
 this compiles and runs on wasmedge

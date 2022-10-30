@@ -1,0 +1,198 @@
+diff --git a/object_store/Cargo.toml b/object_store/Cargo.toml
+index f5eb1115..6d5496f7 100644
+--- a/object_store/Cargo.toml
++++ b/object_store/Cargo.toml
+@@ -33,6 +33,7 @@ async-trait = "0.1.53"
+ bytes = "1.0"
+ chrono = { version = "0.4", default-features = false, features = ["clock"] }
+ futures = "0.3"
++instant = { version = "0.1" }
+ itertools = "0.10.1"
+ parking_lot = { version = "0.12" }
+ percent-encoding = "2.1"
+diff --git a/object_store/src/aws/credential.rs b/object_store/src/aws/credential.rs
+index 32430d7f..2ee64cce 100644
+--- a/object_store/src/aws/credential.rs
++++ b/object_store/src/aws/credential.rs
+@@ -24,13 +24,13 @@ use bytes::Buf;
+ use chrono::{DateTime, Utc};
+ use futures::future::BoxFuture;
+ use futures::TryFutureExt;
++use instant::Instant;
+ use percent_encoding::utf8_percent_encode;
+ use reqwest::header::{HeaderMap, HeaderValue};
+ use reqwest::{Client, Method, Request, RequestBuilder, StatusCode};
+ use serde::Deserialize;
+ use std::collections::BTreeMap;
+ use std::sync::Arc;
+-use std::time::Instant;
+ use tracing::warn;
+ use url::Url;
+ 
+@@ -517,7 +517,7 @@ mod profile {
+     use aws_config::provider_config::ProviderConfig;
+     use aws_types::credentials::ProvideCredentials;
+     use aws_types::region::Region;
+-    use std::time::SystemTime;
++    use instant::SystemTime;
+ 
+     #[derive(Debug)]
+     pub struct ProfileProvider {
+diff --git a/object_store/src/azure/credential.rs b/object_store/src/azure/credential.rs
+index 721fcaea..c68b245b 100644
+--- a/object_store/src/azure/credential.rs
++++ b/object_store/src/azure/credential.rs
+@@ -20,6 +20,7 @@ use crate::client::token::{TemporaryToken, TokenCache};
+ use crate::util::hmac_sha256;
+ use crate::RetryConfig;
+ use chrono::Utc;
++use instant::{Duration, Instant};
+ use reqwest::header::ACCEPT;
+ use reqwest::{
+     header::{
+@@ -32,7 +33,6 @@ use reqwest::{
+ use snafu::{ResultExt, Snafu};
+ use std::borrow::Cow;
+ use std::str;
+-use std::time::{Duration, Instant};
+ use url::Url;
+ 
+ static AZURE_VERSION: HeaderValue = HeaderValue::from_static("2021-08-06");
+diff --git a/object_store/src/client/backoff.rs b/object_store/src/client/backoff.rs
+index 5a6126cc..ccf8cb30 100644
+--- a/object_store/src/client/backoff.rs
++++ b/object_store/src/client/backoff.rs
+@@ -15,8 +15,8 @@
+ // specific language governing permissions and limitations
+ // under the License.
+ 
++use instant::Duration;
+ use rand::prelude::*;
+-use std::time::Duration;
+ 
+ /// Exponential backoff with jitter
+ ///
+diff --git a/object_store/src/client/retry.rs b/object_store/src/client/retry.rs
+index cee86b34..c148a467 100644
+--- a/object_store/src/client/retry.rs
++++ b/object_store/src/client/retry.rs
+@@ -20,9 +20,9 @@
+ use crate::client::backoff::{Backoff, BackoffConfig};
+ use futures::future::BoxFuture;
+ use futures::FutureExt;
++use instant::{Duration, Instant};
+ use reqwest::header::LOCATION;
+ use reqwest::{Response, StatusCode};
+-use std::time::{Duration, Instant};
+ use tracing::info;
+ 
+ /// Retry request error
+@@ -212,8 +212,8 @@ mod tests {
+     use crate::RetryConfig;
+     use hyper::header::LOCATION;
+     use hyper::{Body, Response};
++    use instant::Duration;
+     use reqwest::{Client, Method, StatusCode};
+-    use std::time::Duration;
+ 
+     #[tokio::test]
+     async fn test_retry() {
+diff --git a/object_store/src/client/token.rs b/object_store/src/client/token.rs
+index 2ff28616..2f77ff75 100644
+--- a/object_store/src/client/token.rs
++++ b/object_store/src/client/token.rs
+@@ -15,8 +15,8 @@
+ // specific language governing permissions and limitations
+ // under the License.
+ 
++use instant::Instant;
+ use std::future::Future;
+-use std::time::Instant;
+ use tokio::sync::Mutex;
+ 
+ /// A temporary authentication token with an associated expiry
+diff --git a/object_store/src/gcp/credential.rs b/object_store/src/gcp/credential.rs
+index 5b8cdb84..d9117eb5 100644
+--- a/object_store/src/gcp/credential.rs
++++ b/object_store/src/gcp/credential.rs
+@@ -18,10 +18,10 @@
+ use crate::client::retry::RetryExt;
+ use crate::client::token::TemporaryToken;
+ use crate::RetryConfig;
++use instant::{Duration, Instant};
+ use reqwest::{Client, Method};
+ use ring::signature::RsaKeyPair;
+ use snafu::{ResultExt, Snafu};
+-use std::time::{Duration, Instant};
+ 
+ #[derive(Debug, Snafu)]
+ pub enum Error {
+@@ -195,8 +195,8 @@ impl OAuthProvider {
+ 
+ /// Returns the number of seconds since unix epoch
+ fn seconds_since_epoch() -> u64 {
+-    std::time::SystemTime::now()
+-        .duration_since(std::time::SystemTime::UNIX_EPOCH)
++    instant::SystemTime::now()
++        .duration_since(instant::SystemTime::UNIX_EPOCH)
+         .unwrap()
+         .as_secs()
+ }
+diff --git a/object_store/src/limit.rs b/object_store/src/limit.rs
+index 09c88aa2..ae23114a 100644
+--- a/object_store/src/limit.rs
++++ b/object_store/src/limit.rs
+@@ -237,7 +237,7 @@ mod tests {
+         rename_and_copy, stream_get,
+     };
+     use crate::ObjectStore;
+-    use std::time::Duration;
++    use instant::Duration;
+     use tokio::time::timeout;
+ 
+     #[tokio::test]
+diff --git a/object_store/src/throttle.rs b/object_store/src/throttle.rs
+index 90f427cc..87ad1cf3 100644
+--- a/object_store/src/throttle.rs
++++ b/object_store/src/throttle.rs
+@@ -25,7 +25,7 @@ use crate::{path::Path, GetResult, ListResult, ObjectMeta, ObjectStore, Result};
+ use async_trait::async_trait;
+ use bytes::Bytes;
+ use futures::{stream::BoxStream, StreamExt};
+-use std::time::Duration;
++use instant::Duration;
+ use tokio::io::AsyncWrite;
+ 
+ /// Configuration settings for throttled store
+diff --git a/parquet/Cargo.toml b/parquet/Cargo.toml
+index d2c215d4..0423d4ea 100644
+--- a/parquet/Cargo.toml
++++ b/parquet/Cargo.toml
+@@ -49,6 +49,7 @@ seq-macro = { version = "0.3", default-features = false }
+ futures = { version = "0.3", default-features = false, features = ["std"], optional = true }
+ tokio = { version = "1.0", optional = true, default-features = false, features = ["macros", "rt", "io-util"] }
+ hashbrown = { version = "0.12", default-features = false }
++instant = { version = "0.1" }
+ 
+ [dev-dependencies]
+ base64 = { version = "0.13", default-features = false, features = ["std"] }
+diff --git a/parquet/tests/boolean_writer.rs b/parquet/tests/boolean_writer.rs
+index dc2eccfb..d263eca9 100644
+--- a/parquet/tests/boolean_writer.rs
++++ b/parquet/tests/boolean_writer.rs
+@@ -15,6 +15,7 @@
+ // specific language governing permissions and limitations
+ // under the License.
+ 
++use instant::Duration;
+ use parquet::data_type::BoolType;
+ use parquet::file::properties::WriterProperties;
+ use parquet::file::reader::FileReader;
+@@ -25,7 +26,6 @@ use std::fs;
+ use std::path::Path;
+ use std::sync::{mpsc, Arc};
+ use std::thread;
+-use std::time::Duration;
+ 
+ #[test]
+ fn it_writes_data_without_hanging() {

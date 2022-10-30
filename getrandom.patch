@@ -1,0 +1,12 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 3ea982f..0a489e6 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -30,6 +30,7 @@ js-sys = { version = "0.3", optional = true }
+ wasm-bindgen-test = "0.3.18"
+ 
+ [features]
++default = ["js"]
+ # Implement std-only traits for getrandom::Error
+ std = []
+ # Feature to enable fallback RDRAND-based implementation on x86/x86_64

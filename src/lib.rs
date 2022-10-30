@@ -1,3 +1,4 @@
+use wasm_bindgen::prelude::*;
 
 use std::sync::Arc;
 
@@ -6,23 +7,55 @@ use datafusion::arrow::datatypes::{DataType, Field, Schema};
 use datafusion::arrow::record_batch::RecordBatch;
 
 use datafusion::datasource::MemTable;
-use datafusion::error::Result;
+// use datafusion::error::Result;
 use datafusion::prelude::*;
 
-#[no_mangle]
-pub fn _start() -> i32 {
-    let result = run();
-    match result {
-        Ok(_) => 0,
-        Err(err) => {
-            println!("Error: {}", err);
-            1
-        },
-    }
+use arrow::util::pretty;
+
+use arrow::error::Result as ArrowResult;
+use std::fmt::Display;
+
+pub fn set_panic_hook() {
+    // When the `console_error_panic_hook` feature is enabled, we can call the
+    // `set_panic_hook` function at least once during initialization, and then
+    // we will get better error messages if our code ever panics.
+    //
+    // For more details see
+    // https://github.com/rustwasm/console_error_panic_hook#readme
+    console_error_panic_hook::set_once();
 }
 
-#[tokio::main(flavor = "current_thread")]
-async fn run() -> Result<()>{
+#[no_mangle]
+#[wasm_bindgen]
+pub fn start_running() -> i32 {
+    set_panic_hook();
+
+    alert("start it");
+
+    println!("Starting...");
+
+    wasm_bindgen_futures::spawn_local(async {
+        let result_string = run().await.unwrap();
+
+        alert("got result");
+
+        alert(format!("{}", result_string).as_str());
+    });
+
+    0
+}
+
+#[wasm_bindgen]
+extern "C" {
+    fn alert(s: &str);
+}
+
+// NOTE: tokio/time uses std::time which is not implemented in the browser
+// instead of using current_thread, which we don't actually need, we can
+// call this function using wasm-bindgen-futures
+// #[tokio::main(flavor = "current_thread")]
+#[no_mangle]
+async fn run() -> ArrowResult<impl Display> {
     // define a schema.
     let schema = Arc::new(Schema::new(vec![
         Field::new("a", DataType::Utf8, false),
@@ -48,7 +81,9 @@ async fn run() -> Result<()>{
 
     // Show results
     // let results = df.collect().await?;
-    df.show().await?;
+    // df.show().await?;
 
-    Ok(())
+    let result_string = pretty::pretty_format_batches(&df.collect().await.unwrap()).unwrap();
+
+    Ok(result_string)
 }

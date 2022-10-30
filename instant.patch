@@ -1,0 +1,12 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index b1abe1a..dd72d2e 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -10,6 +10,7 @@ keywords = [ "time", "wasm" ]
+ edition = "2018"
+ 
+ [features]
++default = ["wasm-bindgen", "stdweb"]
+ wasm-bindgen = ["js-sys", "wasm-bindgen_rs", "web-sys"]
+ inaccurate = []
+ now = []

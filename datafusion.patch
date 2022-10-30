@@ -1,8 +1,8 @@
 diff --git a/Cargo.toml b/Cargo.toml
-index ab3f427e..2f24803f 100644
+index ab3f427e..4dfaacc4 100644
 --- a/Cargo.toml
 +++ b/Cargo.toml
-@@ -31,6 +31,47 @@ members = [
+@@ -31,6 +31,49 @@ members = [
  ]
  exclude = ["datafusion-cli"]
  
@@ -26,30 +26,32 @@ index ab3f427e..2f24803f 100644
 +reqwest = { version="0.11.16", git = "https://github.com/milesforks/reqwest"  }
 +
 +# ARROW: this git hash is ~2 commits before 26.0.0
-+arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+arrow-buffer ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+arrow-flight ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+arrow-schema ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+arrow-select ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+parquet = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+parquet_derive ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+parquet_derive_test = {git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-+object_store ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow-buffer ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow-flight ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow-schema ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# arrow-select ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# parquet = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# parquet_derive ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# parquet_derive_test = {git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
++# object_store ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
 +
 +# ARROW: uncomment these to develop from a local version of the arrow-rs repository
-+# arrow = { path = "../arrow-rs/arrow" }
-+# arrow-array = { path = "../arrow-rs/arrow-array" }
-+# arrow-buffer = { path = "../arrow-rs/arrow-buffer" }
-+# arrow-data = { path = "../arrow-rs/arrow-data" }
-+# arrow-flight = { path = "../arrow-rs/arrow-flight" }
-+# arrow-schema = { path = "../arrow-rs/arrow-schema" }
-+# arrow-select = { path = "../arrow-rs/arrow-select" }
-+# parquet = { path = "../arrow-rs/parquet" }
-+# parquet_derive = { path = "../arrow-rs/parquet_derive" }
-+# parquet_derive_test = { path = "../arrow-rs/parquet_derive_test" }
-+# object_store = { path = "../arrow-rs/object_store" }
++arrow = { path = "../arrow-rs/arrow" }
++arrow-array = { path = "../arrow-rs/arrow-array" }
++arrow-buffer = { path = "../arrow-rs/arrow-buffer" }
++arrow-data = { path = "../arrow-rs/arrow-data" }
++arrow-flight = { path = "../arrow-rs/arrow-flight" }
++arrow-schema = { path = "../arrow-rs/arrow-schema" }
++arrow-select = { path = "../arrow-rs/arrow-select" }
++parquet = { path = "../arrow-rs/parquet" }
++parquet_derive = { path = "../arrow-rs/parquet_derive" }
++parquet_derive_test = { path = "../arrow-rs/parquet_derive_test" }
++object_store = { path = "../arrow-rs/object_store" }
++
++getrandom = { path = "../getrandom"}
 diff --git a/README.md b/README.md
 index 29113678..4ca01a91 100644
 --- a/README.md
@@ -91,7 +93,7 @@ index d69bc197..74c23353 100644
  parquet = { version = "25.0.0", default-features = false, optional = true }
  pyo3 = { version = "0.17.1", optional = true }
 diff --git a/datafusion/core/Cargo.toml b/datafusion/core/Cargo.toml
-index 7e9be303..449366a8 100644
+index 7e9be303..ad8c779b 100644
 --- a/datafusion/core/Cargo.toml
 +++ b/datafusion/core/Cargo.toml
 @@ -41,7 +41,7 @@ path = "src/lib.rs"
@@ -125,7 +127,13 @@ index 7e9be303..449366a8 100644
  datafusion-expr = { path = "../expr", version = "13.0.0" }
  datafusion-jit = { path = "../jit", version = "13.0.0", optional = true }
  datafusion-optimizer = { path = "../optimizer", version = "13.0.0" }
-@@ -78,10 +80,14 @@ lazy_static = { version = "^1.4.0" }
+@@ -73,15 +75,20 @@ flate2 = "1.0.24"
+ futures = "0.3"
+ glob = "0.3.0"
+ hashbrown = { version = "0.12", features = ["raw"] }
++instant = { version = "0.1" }
+ itertools = "0.10"
+ lazy_static = { version = "^1.4.0" }
  log = "^0.4"
  num-traits = { version = "0.2", optional = true }
  num_cpus = "1.13.0"
@@ -142,7 +150,7 @@ index 7e9be303..449366a8 100644
  paste = "^1.0"
  percent-encoding = "2.2.0"
  pin-project-lite = "^0.2.7"
-@@ -91,11 +97,15 @@ rayon = { version = "1.5", optional = true }
+@@ -91,11 +98,15 @@ rayon = { version = "1.5", optional = true }
  smallvec = { version = "1.6", features = ["union"] }
  sqlparser = "0.25"
  tempfile = "3"
@@ -152,7 +160,7 @@ index 7e9be303..449366a8 100644
 +# tokio = { version = "1.0", features = ["macros", "rt", "rt-multi-thread", "sync", "fs", "parking_lot"] } # -"rt-multi-thread", -"fs", -"parking_lot"
 +# TODO: rustls support ? https://github.com/samdenty/reqwest/blob/master/Cargo.toml
 +tokio = { version = "1.0", features = ["rt", "macros", "io-util", "parking_lot"] }
-+tokio-stream = { version = "0.1", default_features = false, features = ["time"] } #-"io_util"
++tokio-stream = { version = "0.1", default_features = false, features = [] } #-"io_util"
 +tokio-util = { version = "0.7.4", features = ["io"] }  #-"io"
  url = "2.2"
  uuid = { version = "1.0", features = ["v4"] }
@@ -161,6 +169,26 @@ index 7e9be303..449366a8 100644
  
  [dev-dependencies]
  arrow = { version = "25.0.0", features = ["prettyprint", "dyn_cmp_dict"] }
+diff --git a/datafusion/core/benches/parquet_query_sql.rs b/datafusion/core/benches/parquet_query_sql.rs
+index e9204f86..b2fdd141 100644
+--- a/datafusion/core/benches/parquet_query_sql.rs
++++ b/datafusion/core/benches/parquet_query_sql.rs
+@@ -27,6 +27,7 @@ use criterion::{criterion_group, criterion_main, Criterion};
+ use datafusion::prelude::{SessionConfig, SessionContext};
+ use datafusion::scheduler::Scheduler;
+ use futures::stream::StreamExt;
++use instant::Instant;
+ use parquet::arrow::ArrowWriter;
+ use parquet::file::properties::{WriterProperties, WriterVersion};
+ use rand::distributions::uniform::SampleUniform;
+@@ -37,7 +38,6 @@ use std::io::Read;
+ use std::ops::Range;
+ use std::path::Path;
+ use std::sync::Arc;
+-use std::time::Instant;
+ use tempfile::NamedTempFile;
+ 
+ /// The number of batches to write
 diff --git a/datafusion/core/src/datasource/file_format/file_type.rs b/datafusion/core/src/datasource/file_format/file_type.rs
 index f08a21ca..901fc851 100644
 --- a/datafusion/core/src/datasource/file_format/file_type.rs
@@ -235,6 +263,23 @@ index deaa0924..5117000f 100644
  use std::str::FromStr;
  use std::{any::Any, sync::Arc};
  
+diff --git a/datafusion/core/src/datasource/listing/url.rs b/datafusion/core/src/datasource/listing/url.rs
+index d1a527f2..c13761c6 100644
+--- a/datafusion/core/src/datasource/listing/url.rs
++++ b/datafusion/core/src/datasource/listing/url.rs
+@@ -100,8 +100,10 @@ impl ListingTableUrl {
+ 
+         let path = std::path::Path::new(prefix).canonicalize()?;
+         let url = match path.is_file() {
+-            true => Url::from_file_path(path).unwrap(),
+-            false => Url::from_directory_path(path).unwrap(),
++            // true => Url::from_file_path(path).unwrap(),
++            // false => Url::from_directory_path(path).unwrap(),
++            true => Url::parse("blob:https://example.com/foo").unwrap(),
++            false => Url::parse("blob:https://example.com/bar").unwrap(),
+         };
+ 
+         Ok(Self::new(url, glob))
 diff --git a/datafusion/core/src/datasource/object_store.rs b/datafusion/core/src/datasource/object_store.rs
 index 69b18313..f7c51e81 100644
 --- a/datafusion/core/src/datasource/object_store.rs
@@ -273,6 +318,103 @@ index 69b18313..f7c51e81 100644
      #[test]
      fn test_get_by_url_file() {
          let sut = ObjectStoreRegistry::default();
+diff --git a/datafusion/core/src/execution/memory_manager.rs b/datafusion/core/src/execution/memory_manager.rs
+index 48d4ca3c..369ebd4d 100644
+--- a/datafusion/core/src/execution/memory_manager.rs
++++ b/datafusion/core/src/execution/memory_manager.rs
+@@ -20,13 +20,13 @@
+ use crate::error::{DataFusionError, Result};
+ use async_trait::async_trait;
+ use hashbrown::HashSet;
++use instant::{Duration, Instant};
+ use log::{debug, warn};
+ use parking_lot::{Condvar, Mutex};
+ use std::fmt;
+ use std::fmt::{Debug, Display, Formatter};
+ use std::sync::atomic::{AtomicUsize, Ordering};
+ use std::sync::Arc;
+-use std::time::{Duration, Instant};
+ 
+ static CONSUMER_ID: AtomicUsize = AtomicUsize::new(0);
+ 
+diff --git a/datafusion/core/src/physical_plan/analyze.rs b/datafusion/core/src/physical_plan/analyze.rs
+index 8134ee7d..29c70ce5 100644
+--- a/datafusion/core/src/physical_plan/analyze.rs
++++ b/datafusion/core/src/physical_plan/analyze.rs
+@@ -18,7 +18,8 @@
+ //! Defines the ANALYZE operator
+ 
+ use std::sync::Arc;
+-use std::{any::Any, time::Instant};
++use std::any::Any;
++use instant::Instant;
+ 
+ use crate::{
+     error::{DataFusionError, Result},
+diff --git a/datafusion/core/src/physical_plan/file_format/file_stream.rs b/datafusion/core/src/physical_plan/file_format/file_stream.rs
+index df12f310..f352c5db 100644
+--- a/datafusion/core/src/physical_plan/file_format/file_stream.rs
++++ b/datafusion/core/src/physical_plan/file_format/file_stream.rs
+@@ -21,11 +21,11 @@
+ //! Note: Most traits here need to be marked `Sync + Send` to be
+ //! compliant with the `SendableRecordBatchStream` trait.
+ 
++use instant::Instant;
+ use std::collections::VecDeque;
+ use std::pin::Pin;
+ use std::sync::Arc;
+ use std::task::{Context, Poll};
+-use std::time::Instant;
+ 
+ use arrow::datatypes::SchemaRef;
+ use arrow::{error::Result as ArrowResult, record_batch::RecordBatch};
+diff --git a/datafusion/core/src/physical_plan/joins/cross_join.rs b/datafusion/core/src/physical_plan/joins/cross_join.rs
+index 7a35116a..93a4a1bc 100644
+--- a/datafusion/core/src/physical_plan/joins/cross_join.rs
++++ b/datafusion/core/src/physical_plan/joins/cross_join.rs
+@@ -35,8 +35,8 @@ use crate::physical_plan::{
+ use crate::{error::Result, scalar::ScalarValue};
+ use async_trait::async_trait;
+ use datafusion_physical_expr::PhysicalSortExpr;
++use instant::Instant;
+ use log::debug;
+-use std::time::Instant;
+ 
+ use super::utils::{check_join_is_valid, OnceAsync, OnceFut};
+ 
+diff --git a/datafusion/core/src/physical_plan/joins/hash_join.rs b/datafusion/core/src/physical_plan/joins/hash_join.rs
+index ff036b78..21b9fc4f 100644
+--- a/datafusion/core/src/physical_plan/joins/hash_join.rs
++++ b/datafusion/core/src/physical_plan/joins/hash_join.rs
+@@ -34,10 +34,11 @@ use arrow::{
+         UInt8Type,
+     },
+ };
++use instant::Instant;
+ use smallvec::{smallvec, SmallVec};
+ use std::sync::Arc;
++use std::vec;
+ use std::{any::Any, usize};
+-use std::{time::Instant, vec};
+ 
+ use futures::{ready, Stream, StreamExt, TryStreamExt};
+ 
+diff --git a/datafusion/core/src/physical_plan/metrics/value.rs b/datafusion/core/src/physical_plan/metrics/value.rs
+index 5c3aeb4d..9d690613 100644
+--- a/datafusion/core/src/physical_plan/metrics/value.rs
++++ b/datafusion/core/src/physical_plan/metrics/value.rs
+@@ -24,9 +24,10 @@ use std::{
+         atomic::{AtomicUsize, Ordering},
+         Arc,
+     },
+-    time::{Duration, Instant},
+ };
+ 
++use instant::{Duration, Instant};
++
+ use parking_lot::Mutex;
+ 
+ use chrono::{DateTime, Utc};
 diff --git a/datafusion/core/src/physical_plan/sorts/sort.rs b/datafusion/core/src/physical_plan/sorts/sort.rs
 index 763c7c55..0999fca3 100644
 --- a/datafusion/core/src/physical_plan/sorts/sort.rs
@@ -325,17 +467,34 @@ index bce27767..60738f85 100644
                  Box::new(BzEncoder::new(file, BzCompression::default()))
              }
 diff --git a/datafusion/optimizer/Cargo.toml b/datafusion/optimizer/Cargo.toml
-index 729e2306..90445850 100644
+index 729e2306..dc3fd54b 100644
 --- a/datafusion/optimizer/Cargo.toml
 +++ b/datafusion/optimizer/Cargo.toml
-@@ -39,6 +39,7 @@ unicode_expressions = []
+@@ -39,7 +39,9 @@ unicode_expressions = []
  [dependencies]
  arrow = { version = "25.0.0", features = ["prettyprint"] }
  async-trait = "0.1.41"
 +# chrono = { git = "https://github.com/chronotope/chrono", version = "0.5.0-alpha.1", default-features = false }
  chrono = { version = "0.4.22", default-features = false }
++instant = { version = "0.1" }
  datafusion-common = { path = "../common", version = "13.0.0" }
  datafusion-expr = { path = "../expr", version = "13.0.0" }
+ datafusion-physical-expr = { path = "../physical-expr", version = "13.0.0" }
+diff --git a/datafusion/optimizer/src/optimizer.rs b/datafusion/optimizer/src/optimizer.rs
+index 7c37284e..4a3664cc 100644
+--- a/datafusion/optimizer/src/optimizer.rs
++++ b/datafusion/optimizer/src/optimizer.rs
+@@ -39,9 +39,9 @@ use crate::unwrap_cast_in_comparison::UnwrapCastInComparison;
+ use chrono::{DateTime, Utc};
+ use datafusion_common::{DataFusionError, Result};
+ use datafusion_expr::logical_plan::LogicalPlan;
++use instant::Instant;
+ use log::{debug, trace, warn};
+ use std::sync::Arc;
+-use std::time::Instant;
+ 
+ /// `OptimizerRule` transforms one ['LogicalPlan'] into another which
+ /// computes the same results, but in a potentially more efficient
 diff --git a/datafusion/physical-expr/Cargo.toml b/datafusion/physical-expr/Cargo.toml
 index e0703829..832ef2e8 100644
 --- a/datafusion/physical-expr/Cargo.toml

@@ -13,6 +13,16 @@ name = "dfwasm"
 version = "0.1.0"
 edition = "2021"
 
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false   # wasm-opt is coredumping
+
+[package.metadata.wasm-pack.profile.profiling]
+wasm-opt = false   # wasm-opt is coredumping
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false   # wasm-opt is coredumping
+
 [lib]
 crate-type = ["cdylib"]
 
@@ -22,9 +32,25 @@ crate-type = ["cdylib"]
 # datafusion-expr = { git = "https://github.com/apache/arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
 # datafusion-proto = { git = "https://github.com/apache/arrow-datafusion", rev = "784f10bb57f86a4db2e01a6cb51da742af0dd9d9" }
 tokio = { version = "1.0", features = ["sync","macros","io-util","rt","time"] }
+
+tokio-stream = { version = "0.1", default_features = false, features = [] } # note: duplicated in datafusion/core/Cargo.toml
+
 reqwest = { version = "0.11.16", features = ["json", "stream"] }
 datafusion-expr = { path = "../../arrow-datafusion/datafusion/expr" }
 datafusion-proto = { path = "../../arrow-datafusion/datafusion/proto" }
+
+# for web
+console_error_panic_hook = "0.1.7"
+wasm-bindgen = "0.2.83"
+wasm-bindgen-futures = "0.4.33"
+web-sys = {version = "0.3.60", features = ["Window", "Document", "HtmlElement", "Node", "Text", "DateTimeValue", 'Performance', 'PerformanceTiming'] }
+
+
+# arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+arrow = { path = "../../arrow-rs/arrow" }
+
+instant = { path = "../../instant" }
+
 
 # note: developing with local repo to add patch to 784f10bb57f86a4db2e01a6cb51da742af0dd9d9
 [dependencies.datafusion]
@@ -59,26 +85,29 @@ reqwest = { version = "0.11.16", git = "https://github.com/milesforks/reqwest" }
 
 
 # Arrow (https://github.com/apache/arrow-rs)
-# arrow = { path = "../../arrow-rs/arrow" }
-# arrow-array = { path = "../../arrow-rs/arrow-array" }
-# arrow-buffer = { path = "../../arrow-rs/arrow-buffer" }
-# arrow-data = { path = "../../arrow-rs/arrow-data" }
-# arrow-flight = { path = "../../arrow-rs/arrow-flight" }
-# arrow-schema = { path = "../../arrow-rs/arrow-schema" }
-# arrow-select = { path = "../../arrow-rs/arrow-select" }
-# parquet = { path = "../../arrow-rs/parquet" }
-# parquet_derive = { path = "../../arrow-rs/parquet_derive" }
-# parquet_derive_test = { path = "../../arrow-rs/parquet_derive_test" }
-# object_store = { path = "../../arrow-rs/object_store" }
+arrow = { path = "../../arrow-rs/arrow" }
+arrow-array = { path = "../../arrow-rs/arrow-array" }
+arrow-buffer = { path = "../../arrow-rs/arrow-buffer" }
+arrow-data = { path = "../../arrow-rs/arrow-data" }
+arrow-flight = { path = "../../arrow-rs/arrow-flight" }
+arrow-schema = { path = "../../arrow-rs/arrow-schema" }
+arrow-select = { path = "../../arrow-rs/arrow-select" }
+parquet = { path = "../../arrow-rs/parquet" }
+parquet_derive = { path = "../../arrow-rs/parquet_derive" }
+parquet_derive_test = { path = "../../arrow-rs/parquet_derive_test" }
+object_store = { path = "../../arrow-rs/object_store" }
 
-arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-arrow-buffer ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-arrow-flight ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-arrow-schema ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-arrow-select ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-parquet = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-parquet_derive ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-parquet_derive_test = {git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
-object_store ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow-array = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow-buffer ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow-data = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow-flight ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow-schema ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# arrow-select ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# parquet = { git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# parquet_derive ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# parquet_derive_test = {git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+# object_store ={ git = "https://github.com/apache/arrow-rs", rev = "87ac05bcafd343d3d8ad3b519631d83090afeb1c" }
+
+getrandom = { path = "../../getrandom"}
+instant = { path = "../../instant" }

@@ -1,5 +1,3 @@
-
-
 This repository is a proof-of-concept / experiment / demo of compiling a library
 using [Apache DataFusion](https://github.com/apache/arrow-datafusion) targeting WebAssembly.
 
@@ -21,4 +19,11 @@ it includes are not actually required to get compilation working.
 
 Ultimately, these two branches could be cleaned up and submitted
 together as an upstream patch to datafusion.
+
+
+-------
+
+For more details, see my 
+[comment on the datafusion tracking issue for wasm support](https://github.com/apache/arrow-datafusion/issues/177#issuecomment-1297918179)
+explaining the contents of this patch.
 
